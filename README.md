@@ -35,36 +35,8 @@ This project demonstrates **real-world backend + frontend + DevOps concepts** an
 
 ---
 
-## 🏗️ Architecture
-
-microservices-chat-app/
-│
-├── docker-compose.yml
-│
-├── backend/
-│ ├── auth-service/
-│ │ ├── src/
-│ │ ├── proto/
-│ │ ├── Dockerfile
-│ │ └── .env
-│ │
-│ └── chat-service/
-│ ├── src/
-│ │ ├── routes/
-│ │ ├── sockets/
-│ │ ├── models/
-│ │ └── middleware/
-│ ├── Dockerfile
-│ └── .env
-│
-└── frontend/
-└── chat-ui/
-├── src/
-├── Dockerfile
-└── .env
 
 
----
 
 ## 🔐 Environment Variables
 
