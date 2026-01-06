@@ -12,7 +12,14 @@ export const useChatStore = create((set) => ({
       currentRoom: roomId,
       messages: [], // clear old messages first
     }),
-
+  removeRoom: (roomId) =>
+    set((state) => ({
+      rooms: state.rooms.filter((r) => r._id !== roomId),
+      currentRoom:
+        state.currentRoom === roomId ? null : state.currentRoom,
+      messages:
+        state.currentRoom === roomId ? [] : state.messages,
+    })),
   setMessages: (messages) =>
     set({
       messages: Array.isArray(messages) ? messages : [],
