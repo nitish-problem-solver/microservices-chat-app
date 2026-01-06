@@ -1,9 +1,8 @@
 import Message from "../models/Message.js";
 import { validateToken } from "../grpc/auth.client.js";
-import { getDMRoomId } from "../utils/dmRoom.js";
 
 const chatSocket = (io) => {
-  // 🔐 Authentication middleware (gRPC)
+  /* ===================== AUTH ===================== */
   io.use(async (socket, next) => {
     try {
       const token = socket.handshake.auth?.token;
@@ -14,7 +13,7 @@ const chatSocket = (io) => {
 
       socket.userId = result.userId;
       next();
-    } catch {
+    } catch (err) {
       next(new Error("Authentication failed"));
     }
   });
@@ -22,23 +21,28 @@ const chatSocket = (io) => {
   io.on("connection", (socket) => {
     console.log("User connected:", socket.userId);
 
-    /* ===================== CHAT ROOMS ===================== */
+    /* ===================== ROOMS ===================== */
 
     // Join a room
     socket.on("joinRoom", (roomId) => {
+      if (!roomId) return;
+
       socket.join(roomId);
+
       socket.to(roomId).emit("systemMessage", {
-        message: "User joined the room",
+        text: "User joined the room",
         userId: socket.userId,
+        createdAt: new Date(),
       });
     });
 
     // Leave a room
     socket.on("leaveRoom", (roomId) => {
+      if (!roomId) return;
       socket.leave(roomId);
     });
 
-    // Send message to a room
+    // Send message to a room (MULTI-USER)
     socket.on("sendRoomMessage", async ({ roomId, text }) => {
       if (!roomId || !text) return;
 
@@ -47,29 +51,11 @@ const chatSocket = (io) => {
         roomId,
         text,
         type: "room",
+        createdAt: new Date(),
       });
 
+      // 🔥 Broadcast to ALL users in the room
       io.to(roomId).emit("newRoomMessage", message);
-    });
-
-    /* ===================== DIRECT MESSAGES ===================== */
-
-    socket.on("sendDirectMessage", async ({ toUserId, text }) => {
-      if (!toUserId || !text) return;
-
-      const dmRoomId = getDMRoomId(socket.userId, toUserId);
-
-      // Ensure sender joins the DM room
-      socket.join(dmRoomId);
-
-      const message = await Message.create({
-        userId: socket.userId,
-        roomId: dmRoomId,
-        text,
-        type: "dm",
-      });
-
-      io.to(dmRoomId).emit("newDirectMessage", message);
     });
 
     socket.on("disconnect", () => {
